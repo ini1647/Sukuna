@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Among Us Reactor Dependencies -->
+    <PackageReference Include="Reactor.Networking" Version="1.0.0" />
+    <PackageReference Include="BepInEx" Version="5.4.21" />
+  </ItemGroup>
+
+</Project>
