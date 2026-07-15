@@ -28,9 +28,11 @@ namespace SukunaMod
         private ConfigEntry<float> domainDuration;
         private ConfigEntry<float> domainRadius;
         private ConfigEntry<float> domainCooldown;
+        private ConfigEntry<bool> useButtons;
 
         // Runtime
         private Dictionary<byte, SukunaPlayer> sukunaPlayers = new Dictionary<byte, SukunaPlayer>();
+        private Dictionary<byte, UI.SukunaUIManager> uiManagers = new Dictionary<byte, UI.SukunaUIManager>();
         private float lastAbilityCheckTime = 0f;
 
         private void Awake()
@@ -65,6 +67,9 @@ namespace SukunaMod
             domainDuration = Config.Bind("Abilities", "DomainDuration", 10f, "Domain Expansion duration in seconds");
             domainRadius = Config.Bind("Abilities", "DomainRadius", 5.0f, "Domain Expansion radius in tiles");
             domainCooldown = Config.Bind("Abilities", "DomainCooldown", 60f, "Domain Expansion cooldown in seconds");
+
+            // UI Settings
+            useButtons = Config.Bind("UI", "UseButtons", true, "Enable on-screen buttons for abilities (disables keyboard-only mode)");
         }
 
         private void Update()
@@ -84,14 +89,25 @@ namespace SukunaMod
 
             // Initialize player if not exists
             if (!sukunaPlayers.ContainsKey(playerId))
+            {
                 sukunaPlayers[playerId] = new SukunaPlayer(playerId, cleaveCooldown.Value, slashCooldown.Value, domainCooldown.Value);
+                
+                // Create UI if enabled
+                if (useButtons.Value)
+                {
+                    GameObject uiObj = new GameObject("SukunaUI");
+                    var uiManager = uiObj.AddComponent<UI.SukunaUIManager>();
+                    uiManager.Initialize(sukunaPlayers[playerId]);
+                    uiManagers[playerId] = uiManager;
+                }
+            }
 
             SukunaPlayer sukuna = sukunaPlayers[playerId];
 
             // Update cooldowns
             sukuna.UpdateCooldowns(Time.deltaTime);
 
-            // Handle input
+            // Handle keyboard input
             if (Input.GetKeyDown(transformKey.Value))
             {
                 sukuna.ToggleTransformation();
@@ -102,20 +118,23 @@ namespace SukunaMod
             if (!sukuna.IsSukuna)
                 return;
 
-            // Ability inputs
-            if (Input.GetKeyDown(cleaveKey.Value) && sukuna.CanUseAbility("Cleave"))
+            // Ability inputs (only if not using buttons)
+            if (!useButtons.Value)
             {
-                ExecuteCleave(sukuna);
-            }
+                if (Input.GetKeyDown(cleaveKey.Value) && sukuna.CanUseAbility("Cleave"))
+                {
+                    ExecuteCleave(sukuna);
+                }
 
-            if (Input.GetKeyDown(slashKey.Value) && sukuna.CanUseAbility("Slash"))
-            {
-                ExecuteSlash(sukuna);
-            }
+                if (Input.GetKeyDown(slashKey.Value) && sukuna.CanUseAbility("Slash"))
+                {
+                    ExecuteSlash(sukuna);
+                }
 
-            if (Input.GetKeyDown(domainKey.Value) && sukuna.CanUseAbility("Domain"))
-            {
-                ExecuteDomain(sukuna);
+                if (Input.GetKeyDown(domainKey.Value) && sukuna.CanUseAbility("Domain"))
+                {
+                    ExecuteDomain(sukuna);
+                }
             }
         }
 
